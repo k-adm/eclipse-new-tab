@@ -1,0 +1,21 @@
+{
+    "manifest_version": 3,
+    "name": "Eclipse New Tab",
+    "description": "Overrides Chrome’s new tab with a dark-theme search page, shortcuts, and dynamic Unsplash backgrounds.",
+    "version": "1.0.0",
+    "permissions": [
+      "storage"
+    ],
+    "host_permissions": [
+      "https://suggestqueries.google.com/*"
+    ],
+    "chrome_url_overrides": {
+      "newtab": "index.html"
+    },
+    "icons": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  }
+  
