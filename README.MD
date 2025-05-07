@@ -46,7 +46,7 @@ Eclipse New Tab is a customizable Chrome extension that replaces your default Ne
 1. **Clone the repository**
 
    ```bash
-   git clone https://github.com/<your‑username>/eclipse-new-tab.git
+   git clone https://github.com/k-adm/eclipse-new-tab.git
    cd eclipse-new-tab
    ```
 
