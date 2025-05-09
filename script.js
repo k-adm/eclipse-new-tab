@@ -12,6 +12,10 @@ const nameInput          = document.getElementById('siteName');
 const urlInput           = document.getElementById('siteURL');
 const customizeBtn       = document.getElementById('customizeBtn');
 const customizeModal     = document.getElementById('customizeModal');
+const settingsBtn        = document.getElementById('settingsBtn');
+const settingsModal      = document.getElementById('settingsModal');
+const resetFaviconsBtn   = document.getElementById('resetFaviconsBtn');
+const cancelSettingsBtn  = document.getElementById('cancelSettingsBtn');
 const unsplashKeyInput   = document.getElementById('unsplashKeyInput');
 const searchQueryInput   = document.getElementById('searchQueryInput');
 const saveCustomizeBtn   = document.getElementById('saveCustomizeBtn');
@@ -84,17 +88,35 @@ function updateHighlight(items) {
 }
 
 /**
- * Generates a favicon URL for a given site URL.
+ * Gets the favicon URL for a given site URL.
+ * First tries to get the stored favicon from chrome.storage.local,
+ * if not found, returns null to show the first letter fallback.
  *
  * @param {string} siteUrl  - The full URL of the site.
- * @returns {?string}       - Favicon URL or null if invalid.
+ * @returns {Promise<?string>} - Favicon URL or null if not found.
  */
-function getFaviconUrl(siteUrl) {
+async function getFaviconUrl(siteUrl) {
   try {
     const host = new URL(siteUrl).hostname;
-    return `https://www.faviconextractor.com/favicon/${host}?larger=true`;
+    const result = await chrome.storage.local.get([`favicon_${host}`]);
+    return result[`favicon_${host}`] || null;
   } catch {
     return null;
+  }
+}
+
+/**
+ * Stores the favicon URL for a given site in chrome.storage.local.
+ *
+ * @param {string} siteUrl  - The full URL of the site.
+ * @param {string} faviconUrl - The favicon URL to store.
+ */
+async function storeFavicon(siteUrl, faviconUrl) {
+  try {
+    const host = new URL(siteUrl).hostname;
+    await chrome.storage.local.set({ [`favicon_${host}`]: faviconUrl });
+  } catch {
+    // Ignore invalid URLs
   }
 }
 
@@ -210,7 +232,7 @@ const closeModal = () => modal.classList.add('hidden');
  * @param {string} name  - Display name of the site.
  * @param {string} url   - URL of the site.
  */
-function addShortcut(name, url) {
+async function addShortcut(name, url) {
   const anchor = document.createElement('a');
   anchor.href      = url;
   anchor.className = 'shortcut';
@@ -218,14 +240,23 @@ function addShortcut(name, url) {
 
   const iconDiv    = document.createElement('div');
   iconDiv.className = 'shortcut-icon';
-  const fav        = getFaviconUrl(url);
-
-  if (fav) {
-    const img = document.createElement('img');
-    img.src   = fav;
-    img.alt   = `${name} favicon`;
-    iconDiv.appendChild(img);
-  } else {
+  
+  try {
+    const host = new URL(url).hostname;
+    const result = await chrome.storage.local.get([`favicon_${host}`]);
+    const faviconUrl = result[`favicon_${host}`];
+    
+    if (faviconUrl) {
+      const img = document.createElement('img');
+      img.src   = faviconUrl;
+      img.alt   = `${name} favicon`;
+      iconDiv.appendChild(img);
+    } else {
+      const span = document.createElement('span');
+      span.textContent = name.charAt(0).toUpperCase();
+      iconDiv.appendChild(span);
+    }
+  } catch {
     const span = document.createElement('span');
     span.textContent = name.charAt(0).toUpperCase();
     iconDiv.appendChild(span);
@@ -287,7 +318,8 @@ function prefetchAndPreload() {
         const preload = document.createElement('link');
         preload.rel  = 'preload';
         preload.href = `${protocol}//${hostname}/`;
-        preload.as   = 'document';
+        preload.as   = 'fetch';
+        preload.crossOrigin = 'anonymous';
         document.head.appendChild(preload);
       } catch {
         // ignore invalid URLs
@@ -296,10 +328,42 @@ function prefetchAndPreload() {
   });
 }
 
+/**
+ * Resets all stored favicons and updates the UI.
+ *
+ * @returns {Promise<void>}
+ */
+async function resetFavicons() {
+  try {
+    // Get all stored keys
+    const result = await chrome.storage.local.get(null);
+    
+    // Filter out favicon keys and remove them
+    const faviconKeys = Object.keys(result).filter(key => key.startsWith('favicon_'));
+    await chrome.storage.local.remove(faviconKeys);
+    
+    // Refresh all shortcuts to show first letters
+    const shortcuts = [...container.querySelectorAll('.shortcut')]
+      .filter(el => el.id !== 'addShortcut');
+    
+    for (const shortcut of shortcuts) {
+      const name = shortcut.querySelector('.shortcut-label').textContent;
+      const iconDiv = shortcut.querySelector('.shortcut-icon');
+      
+      iconDiv.innerHTML = '';
+      const span = document.createElement('span');
+      span.textContent = name.charAt(0).toUpperCase();
+      iconDiv.appendChild(span);
+    }
+  } catch (err) {
+    console.error('Error resetting favicons:', err);
+  }
+}
+
 // ——— 9) EVENT LISTENERS ———
 
 // Save or update a shortcut
-saveBtn.addEventListener('click', () => {
+saveBtn.addEventListener('click', async () => {
   let name = nameInput.value.trim();
   let url  = urlInput.value.trim();
   if (!name || !url) { alert('Enter both name and URL'); return; }
@@ -310,7 +374,7 @@ saveBtn.addEventListener('click', () => {
     currentElement.querySelector('.shortcut-label').textContent = name;
     const icon = currentElement.querySelector('.shortcut-icon');
     icon.innerHTML = '';
-    const fav = getFaviconUrl(url);
+    const fav = await getFaviconUrl(url);
 
     if (fav) {
       const img = document.createElement('img');
@@ -325,7 +389,7 @@ saveBtn.addEventListener('click', () => {
 
     saveToLocalStorage();
   } else {
-    addShortcut(name, url);
+    await addShortcut(name, url);
   }
 
   closeModal();
@@ -418,8 +482,8 @@ document.addEventListener('click', e => {
 searchIcon.addEventListener('click', () => searchForm.submit());
 
 // Initialize on page load
-document.addEventListener('DOMContentLoaded', () => {
-  loadShortcuts();
+document.addEventListener('DOMContentLoaded', async () => {
+  await loadShortcuts();
   chrome.storage.local.get([KEY_STORAGE, QUERY_STORAGE], res => {
     unsplashAccessKey = res[KEY_STORAGE] || '';
     searchQuery       = res[QUERY_STORAGE] || 'nature background';
@@ -429,4 +493,20 @@ document.addEventListener('DOMContentLoaded', () => {
   container.querySelectorAll('.shortcut').forEach(el => {
     if (el.id !== 'addShortcut') addEditIcon(el);
   });
+});
+
+// Settings button click → open settings modal
+settingsBtn.addEventListener('click', () => {
+  settingsModal.classList.remove('hidden');
+});
+
+// Cancel settings button click → close settings modal
+cancelSettingsBtn.addEventListener('click', () => {
+  settingsModal.classList.add('hidden');
+});
+
+// Reset favicons button click → reset favicons and close modal
+resetFaviconsBtn.addEventListener('click', async () => {
+  await resetFavicons();
+  settingsModal.classList.add('hidden');
 });

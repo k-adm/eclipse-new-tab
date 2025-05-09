@@ -128,6 +128,9 @@
       text-decoration: none; color: #e8eaed;
       margin: 0 8px; cursor: pointer;
     }
+    .footer a:hover {
+      color: #8ab4f8;
+    }
     .modal {
       position: fixed; top: 0; left: 0;
       width: 100%; height: 100%;
@@ -154,7 +157,7 @@
     }
     .save-btn   { background: #8ab4f8; color: #202124; }
     .cancel-btn { background: #5f6368; color: #e8eaed; }
-    .delete-btn { background: #d93025; color: #fff; display: none; }
+    .delete-btn { background: #d93025; color: #fff; display: inline-block; }
     .hidden     { display: none; }
   </style>
 </head>
@@ -211,7 +214,16 @@
       <a href="https://github.com/k-adm/start-page" target="_blank" rel="noopener">GitHub</a>
     </div>
     <div class="right-links">
+      <a id="settingsBtn">Settings</a>
       <a id="customizeBtn">Customize</a>
+    </div>
+  </div>
+
+  <div id="settingsModal" class="modal hidden">
+    <div class="modal-content">
+      <h2>Settings</h2>
+      <button id="resetFaviconsBtn" class="btn delete-btn">Reset Favicons</button>
+      <button id="cancelSettingsBtn" class="btn cancel-btn">Cancel</button>
     </div>
   </div>
 
