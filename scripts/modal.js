@@ -1,33 +1,47 @@
-// scripts/modal.js
+// modal.js
+
+/**
+ * @module modal
+ * Handles opening and closing of the customize and settings modals.
+ *
+ * Uses event delegation to close modals when clicking outside the content
+ * and binds open actions to Customize and Settings buttons.
+ */
 export function setupModals() {
-  const addBtn       = document.getElementById('addShortcut');
   const customizeBtn = document.getElementById('customizeBtn');
-  const settingsBtn  = document.getElementById('settingsBtn');
-  const modals       = ['modal', 'customizeModal', 'settingsModal']
-    .map(id => document.getElementById(id));
+  const settingsBtn = document.getElementById('settingsBtn');
+  const modals = ['customizeModal', 'settingsModal'].map((id) =>
+    document.getElementById(id),
+  );
 
-  // open
-  addBtn      .addEventListener('click', () => document.getElementById('modal')         .classList.remove('hidden'));
-  customizeBtn.addEventListener('click', () => document.getElementById('customizeModal') .classList.remove('hidden'));
-  settingsBtn .addEventListener('click', () => document.getElementById('settingsModal')  .classList.remove('hidden'));
+  // Open Customize Modal
+  customizeBtn.addEventListener('click', () => {
+    document.getElementById('customizeModal').classList.remove('hidden');
+  });
 
-  // close on X
-  document.querySelectorAll('.close-btn').forEach(btn => {
+  // Open Settings Modal
+  settingsBtn.addEventListener('click', () => {
+    document.getElementById('settingsModal').classList.remove('hidden');
+  });
+
+  // Close modals on clicking the X button
+  document.querySelectorAll('.close-btn').forEach((btn) => {
     btn.addEventListener('click', () => {
       document.getElementById(btn.dataset.modal).classList.add('hidden');
     });
   });
 
-  // close outside
-  document.addEventListener('click', e => {
-    modals.forEach(m => {
-      if (!m.classList.contains('hidden')) {
-        const content = m.querySelector('.modal-content');
-        if (!content.contains(e.target) &&
-            !addBtn.contains(e.target) &&
-            !customizeBtn.contains(e.target) &&
-            !settingsBtn.contains(e.target)) {
-          m.classList.add('hidden');
+  // Close when clicking outside of any open modal
+  document.addEventListener('click', (event) => {
+    modals.forEach((modalEl) => {
+      if (!modalEl.classList.contains('hidden')) {
+        const content = modalEl.querySelector('.modal-content');
+        if (
+          !content.contains(event.target) &&
+          !customizeBtn.contains(event.target) &&
+          !settingsBtn.contains(event.target)
+        ) {
+          modalEl.classList.add('hidden');
         }
       }
     });
