@@ -30,9 +30,11 @@ const searchContainer    = document.querySelector('.search-container');
 const STORAGE_KEY   = 'shortcuts';
 const KEY_STORAGE   = 'unsplashKey';
 const QUERY_STORAGE = 'searchQuery';
+const IPIFY_KEY_STORAGE = 'ipifyKey';
 
 let unsplashAccessKey = '';
 let searchQuery       = 'nature background';
+let ipifyKey         = '';
 let isEditing         = false;
 let currentElement    = null;
 let selectedIndex     = -1;
@@ -237,6 +239,7 @@ async function addShortcut(name, url) {
   anchor.href      = url;
   anchor.className = 'shortcut';
   anchor.target    = '_self';
+  anchor.draggable = true;  // Make the shortcut draggable
 
   const iconDiv    = document.createElement('div');
   iconDiv.className = 'shortcut-icon';
@@ -270,6 +273,51 @@ async function addShortcut(name, url) {
   addEditIcon(anchor);
   container.insertBefore(anchor, addBtn);
   saveToLocalStorage();
+
+  // Add drag event listeners
+  anchor.addEventListener('dragstart', handleDragStart);
+  anchor.addEventListener('dragend', handleDragEnd);
+  anchor.addEventListener('dragover', handleDragOver);
+  anchor.addEventListener('drop', handleDrop);
+}
+
+// Drag and drop handlers
+let draggedItem = null;
+
+function handleDragStart(e) {
+  draggedItem = this;
+  this.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', ''); // Required for Firefox
+}
+
+function handleDragEnd(e) {
+  this.classList.remove('dragging');
+  draggedItem = null;
+}
+
+function handleDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  return false;
+}
+
+function handleDrop(e) {
+  e.preventDefault();
+  if (draggedItem === this) return;
+
+  const allItems = [...container.querySelectorAll('.shortcut')];
+  const draggedIndex = allItems.indexOf(draggedItem);
+  const droppedIndex = allItems.indexOf(this);
+
+  if (draggedIndex < droppedIndex) {
+    container.insertBefore(draggedItem, this.nextSibling);
+  } else {
+    container.insertBefore(draggedItem, this);
+  }
+
+  saveToLocalStorage();
+  return false;
 }
 
 /**
@@ -357,6 +405,36 @@ async function resetFavicons() {
     }
   } catch (err) {
     console.error('Error resetting favicons:', err);
+  }
+}
+
+/**
+ * Fetches IP and location information from ipify API.
+ * 
+ * @returns {Promise<void>}
+ */
+async function fetchIpInfo() {
+  try {
+    if (!ipifyKey) return;
+    
+    const response = await fetch(
+      `https://geo.ipify.org/api/v2/country,city?apiKey=${ipifyKey}`
+    );
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch IP info');
+    }
+    
+    const data = await response.json();
+    const ipAddress = document.getElementById('ipAddress');
+    const location = document.getElementById('location');
+    
+    ipAddress.textContent = data.ip;
+    location.textContent = `${data.location.city}, ${data.location.country}`;
+  } catch (err) {
+    console.error('Error fetching IP info:', err);
+    document.getElementById('ipAddress').textContent = 'IP info unavailable';
+    document.getElementById('location').textContent = '';
   }
 }
 
@@ -484,11 +562,13 @@ searchIcon.addEventListener('click', () => searchForm.submit());
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', async () => {
   await loadShortcuts();
-  chrome.storage.local.get([KEY_STORAGE, QUERY_STORAGE], res => {
+  chrome.storage.local.get([KEY_STORAGE, QUERY_STORAGE, IPIFY_KEY_STORAGE], res => {
     unsplashAccessKey = res[KEY_STORAGE] || '';
     searchQuery       = res[QUERY_STORAGE] || 'nature background';
+    ipifyKey         = res[IPIFY_KEY_STORAGE] || '';
     updateBackground();
     prefetchAndPreload();
+    fetchIpInfo();
   });
   container.querySelectorAll('.shortcut').forEach(el => {
     if (el.id !== 'addShortcut') addEditIcon(el);
@@ -497,7 +577,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // Settings button click → open settings modal
 settingsBtn.addEventListener('click', () => {
-  settingsModal.classList.remove('hidden');
+  chrome.storage.local.get([IPIFY_KEY_STORAGE], res => {
+    ipifyKey = res[IPIFY_KEY_STORAGE] || '';
+    document.getElementById('ipifyKeyInput').value = ipifyKey;
+    settingsModal.classList.remove('hidden');
+  });
 });
 
 // Cancel settings button click → close settings modal
@@ -505,8 +589,15 @@ cancelSettingsBtn.addEventListener('click', () => {
   settingsModal.classList.add('hidden');
 });
 
-// Reset favicons button click → reset favicons and close modal
+// Save settings button click → save settings and close modal
+document.getElementById('saveSettingsBtn').addEventListener('click', () => {
+  ipifyKey = document.getElementById('ipifyKeyInput').value.trim();
+  chrome.storage.local.set({ [IPIFY_KEY_STORAGE]: ipifyKey });
+  settingsModal.classList.add('hidden');
+  fetchIpInfo(); // Update IP info when API key is saved
+});
+
+// Reset favicons button click → reset favicons
 resetFaviconsBtn.addEventListener('click', async () => {
   await resetFavicons();
-  settingsModal.classList.add('hidden');
 });

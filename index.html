@@ -119,6 +119,17 @@
     .edit-icon path { fill: #202124; }
     .edit-icon:hover path { fill: #8ab4f8; }
 
+    .shortcut.dragging {
+      opacity: 0.5;
+      cursor: move;
+    }
+    .shortcut {
+      cursor: grab;
+    }
+    .shortcut:active {
+      cursor: grabbing;
+    }
+
     .footer {
       width: 100%; padding: 12px 24px;
       display: flex; justify-content: space-between;
@@ -159,9 +170,47 @@
     .cancel-btn { background: #5f6368; color: #e8eaed; }
     .delete-btn { background: #d93025; color: #fff; display: inline-block; }
     .hidden     { display: none; }
+
+    .settings-section {
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #5f6368;
+    }
+    .settings-section:last-of-type {
+      border-bottom: none;
+    }
+    .settings-section h3 {
+      margin: 0 0 12px;
+      font-size: 16px;
+      color: #8ab4f8;
+    }
+    .modal-buttons {
+      margin-top: 24px;
+      text-align: right;
+    }
+
+    .ip-info {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      background-color: rgba(48, 49, 52, 0.8);
+      padding: 8px 16px;
+      border-radius: 8px;
+      color: #e8eaed;
+      font-size: 12px;
+      z-index: 1;
+    }
+    .ip-info .location {
+      color: #8ab4f8;
+      margin-left: 8px;
+    }
   </style>
 </head>
 <body>
+  <div class="ip-info">
+    <span id="ipAddress">Loading...</span>
+    <span id="location" class="location"></span>
+  </div>
   <div class="main">
     <div class="logo">
       <img
@@ -222,8 +271,22 @@
   <div id="settingsModal" class="modal hidden">
     <div class="modal-content">
       <h2>Settings</h2>
-      <button id="resetFaviconsBtn" class="btn delete-btn">Reset Favicons</button>
-      <button id="cancelSettingsBtn" class="btn cancel-btn">Cancel</button>
+      
+      <div class="settings-section">
+        <h3>IPify API</h3>
+        <label for="ipifyKeyInput">API Key:</label>
+        <input type="text" id="ipifyKeyInput" placeholder="Enter your IPify API Key"/>
+      </div>
+
+      <div class="settings-section">
+        <h3>Favicons</h3>
+        <button id="resetFaviconsBtn" class="btn delete-btn">Reset Favicons</button>
+      </div>
+
+      <div class="modal-buttons">
+        <button id="saveSettingsBtn" class="btn save-btn">Save</button>
+        <button id="cancelSettingsBtn" class="btn cancel-btn">Cancel</button>
+      </div>
     </div>
   </div>
 
