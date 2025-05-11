@@ -5,6 +5,7 @@ Eclipse New Tab is a customizable Chrome extension that replaces your default Ne
 * **Live Google‑style search bar** with dropdown suggestions and keyboard navigation
 * **Dynamic Unsplash backgrounds** based on your own search queries
 * **Favorite site shortcuts** with DNS prefetch & preload for instant loading
+* **Tab system for organizing shortcuts** with drag-and-drop reordering
 * **Easy customization** of shortcuts and background settings
 
 ---
@@ -25,16 +26,24 @@ Eclipse New Tab is a customizable Chrome extension that replaces your default Ne
 
 3. **Favorite Shortcuts**
 
-   * Add, edit, or delete up to 8 favorite sites
+   * Add, edit, or delete favorite sites
    * Auto‑fetch favicons or use first‑letter icons
-   * DNS prefetch & preload for each shortcut’s domain
+   * DNS prefetch & preload for each shortcut's domain
+   * Organize shortcuts into tabs for better organization
 
-4. **Dark Theme & Responsive Layout**
+4. **Tab Organization System**
+
+   * Create multiple tabs to categorize your shortcuts
+   * Default "Ungrouped" tab that's always available
+   * Drag and drop tabs to reorder them
+   * Each shortcut belongs to a specific tab
+
+5. **Dark Theme & Responsive Layout**
 
    * Sleek dark interface with translucent elements
    * Mobile‑friendly and scales across resolutions
 
-5. **One‑Click Customize**
+6. **One‑Click Customize**
 
    * Unsplash API key and search query input
    * Instant preview of your new background
@@ -65,8 +74,11 @@ Eclipse New Tab is a customizable Chrome extension that replaces your default Ne
 ## Usage
 
 * **Search:** Type in the bar, select suggestion with arrow keys or click, hit Enter to search in the same tab.
-* **Add Shortcut:** Click the **+** icon, enter a name and URL, then save.
+* **Add Shortcut:** Click the **+** icon, enter a name and URL, then save. The shortcut will be added to the currently active tab.
 * **Edit/Delete Shortcut:** Hover a shortcut and click the pencil icon, then edit or delete.
+* **Create Tab:** Click the "+ New Tab" button to create a new tab for organizing shortcuts.
+* **Edit/Delete Tab:** Hover over a tab and click the pencil icon to edit or delete it.
+* **Reorder Tabs:** Drag and drop tabs to reorder them (except the "Ungrouped" tab which always stays first).
 * **Customize Background:** Click **Customize**, enter your Unsplash Access Key and query, then save.
 
 ---
